@@ -1,6 +1,7 @@
 #include <iostream>
 #include <forward_list>
 #include "containers/forward_list.h"
+
 using namespace std;
 int cnt = 0;
 
@@ -17,11 +18,13 @@ struct C {
 };
 
 int main() {
-    Readable::forward_list<int> l;
-    auto it = l.insert_after(l.before_begin(), 10, 1);
-    l.insert_after(it, 2);
-    for (auto i:l) {
-        cout << i;
+    Readable::forward_list<int> l{2, 3, 3, 6, 6, 4, 1, 4, 2, 2, 7, 4, 5, 9, 1, 5, 1, 5, 7, 1, 5};
+    Readable::forward_list<int> l1(10);
+    l.sort();
+    for (auto n:l) {
+        cout << n << ',';
     }
+    cout << endl;
+
     return 0;
 }

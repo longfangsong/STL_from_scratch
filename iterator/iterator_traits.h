@@ -58,6 +58,75 @@ namespace Readable {
         typedef const T &reference;
         typedef Readable::random_access_iterator_tag iterator_category;
     };
+
+    /**
+     * advance针对随机访问迭代器的优化实现
+     * @tparam RandomAccessIterator 随机访问迭代器类型
+     * @param it 要进行前进操作的迭代器
+     * @param n 前进的步数，可正可负
+     * @note 时间复杂度O(1)
+     */
+    template<typename RandomAccessIterator>
+    void advance(RandomAccessIterator &it, typename iterator_traits<RandomAccessIterator>::difference_type n,
+                 random_access_iterator_tag) {
+        it += n;
+    };
+
+    /**
+     * advance针对双向迭代器的优化实现
+     * @tparam BidirectionalIterator 双向迭代器类型
+     * @param it 要进行前进操作的迭代器
+     * @param n 前进的步数，可正可负
+     * @note 时间复杂度O(abs(n))
+     */
+    template<typename BidirectionalIterator>
+    void advance(BidirectionalIterator &it, typename iterator_traits<BidirectionalIterator>::difference_type n,
+                 bidirectional_iterator_tag) {
+        if (n > 0) {
+            for (typename iterator_traits<BidirectionalIterator>::difference_type i = 0; i < n; ++i) {
+                ++it;
+            }
+        } else {
+            for (typename iterator_traits<BidirectionalIterator>::difference_type i = 0; i < -n; ++i) {
+                --it;
+            }
+        }
+    };
+
+    /**
+     * advance的一般实现
+     * @tparam InputIterator 任何符合InputIterator的类型
+     * @param it 要进行前进操作的迭代器
+     * @param n 前进的步数，只能是正数
+     * @note 时间复杂度O(n)
+     */
+    template<typename InputIterator>
+    void advance(InputIterator &it, typename iterator_traits<InputIterator>::difference_type n, input_iterator_tag) {
+        for (typename iterator_traits<InputIterator>::difference_type i = 0; i < n; ++i) {
+            ++it;
+        }
+    };
+
+
+    /**
+     * 对迭代器 @arg it 进行前进操作
+     * @tparam InputIt 任何符合InputIterator的类型
+     * @param it 要进行前进操作的迭代器
+     * @param n 前进的步数
+     */
+    template<typename InputIt>
+    void advance(InputIt &it, typename iterator_traits<InputIt>::difference_type n) {
+        // 此处使用了traits技法
+        // 先利用iterator_traits提取出iterator的类型
+        // 再根据提取出的类型匹配到对应的实现
+        advance(it, n, typename iterator_traits<InputIt>::iterator_category());
+    };
+
+    template<typename ForwardIt>
+    ForwardIt next(ForwardIt it, typename Readable::iterator_traits<ForwardIt>::difference_type n = 1) {
+        advance(it, n);
+        return it;
+    }
 }
 
 
