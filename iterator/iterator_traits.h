@@ -122,10 +122,47 @@ namespace Readable {
         advance(it, n, typename iterator_traits<InputIt>::iterator_category());
     };
 
+    /**
+     * 返回 @arg it 前进 @arg n 步后的迭代器
+     * @tparam ForwardIt 前向迭代器以上
+     * @param it 要前进迭代器
+     * @param n 要前进的步数
+     * @return @arg it 前进 @arg n 步后的迭代器
+     */
     template<typename ForwardIt>
     ForwardIt next(ForwardIt it, typename Readable::iterator_traits<ForwardIt>::difference_type n = 1) {
         advance(it, n);
         return it;
+    }
+
+    /**
+     * 返回两个迭代器之间的距离
+     * @tparam InputIt 输入迭代器以上
+     * @param first 第一个迭代器
+     * @param last 最后一个迭代器
+     * @return @arg first 和 @arg last 之间的距离
+     */
+    template<typename InputIt>
+    typename Readable::iterator_traits<InputIt>::difference_type distance(InputIt first, InputIt last) {
+        // traits技法，见advance的实现
+        return distance(first, last, Readable::iterator_traits<InputIt>::iterator_category());
+    }
+
+    template<typename InputIt>
+    typename Readable::iterator_traits<InputIt>::difference_type
+    distance(InputIt first, InputIt last, input_iterator_tag) {
+        typename Readable::iterator_traits<InputIt>::difference_type n = 0;
+        while (first != last) {
+            ++first;
+            ++n;
+        }
+        return n;
+    }
+
+    template<typename RandomAccessIt>
+    typename Readable::iterator_traits<RandomAccessIt>::difference_type
+    distance(RandomAccessIt first, RandomAccessIt last, random_access_iterator_tag) {
+        return last - first;
     }
 }
 

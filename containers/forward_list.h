@@ -5,11 +5,10 @@
 #include "../iterator/iterator_traits.h"
 #include "../memory/uninitialized_memory_functions.h"
 #include "../utility/utility.h"
-#include "../type_traits.h"
 
 namespace Readable {
     struct forward_list_node_base {
-        forward_list_node_base *next;
+        forward_list_node_base *next = nullptr;
     };
 
     template<typename T>
@@ -96,30 +95,17 @@ namespace Readable {
         forward_list() : forward_list(Allocator()) {}
 
         // 下面这两个函数由于模版匹配的优先级高于整型隐式提升，故在传入两个int时匹配存在问题
-        // 故需借由traits进行转发
+        // 故需借由traits进行转发(dispatch)
+        // 实际dispatch的操作在insert_after中
         explicit forward_list(size_type element_count,
                               const T &value = T(),
                               const Allocator &alloc = Allocator()) : forward_list() {
-            constructor(element_count, value, std::true_type());
+            insert_after(before_begin(), element_count, value);
         }
 
         template<typename InputIt>
         forward_list(InputIt first, InputIt last,
                      const Allocator &alloc = Allocator()):forward_list(alloc) {
-            // 若is_integral为true_type，则将first判为iterator则为错判，改为调用正确的constructor
-            // 否则判断正确，调用相应的constructor
-            constructor(first, last, std::is_integral<InputIt>());
-        }
-
-        template<typename Integral>
-        void constructor(Integral element_count,
-                         const T &value, std::true_type) {
-            insert_after(before_begin(), (size_type) element_count, value);
-        }
-
-        template<typename InputIt>
-        void constructor(InputIt first, InputIt last,
-                         std::false_type) {
             insert_after(before_begin(), first, last);
         }
 
@@ -273,8 +259,9 @@ namespace Readable {
             return iterator(insert_after(node_to_be_inserted_after, node_to_insert));
         }
 
+    private:
         iterator
-        insert_after(const_iterator pos, size_type element_to_insert_count, const T &value) {
+        insert_after_imp(const_iterator pos, size_type element_to_insert_count, const T &value, std::true_type) {
             size_type i = 0;
             const_iterator origin_pos(pos);
             try {
@@ -291,13 +278,24 @@ namespace Readable {
         }
 
         template<typename InputIt>
-        iterator insert_after(const_iterator pos, InputIt first, InputIt last) {
+        iterator insert_after_imp(const_iterator pos, InputIt first, InputIt last, std::false_type) {
             const_iterator now_should_insert_after(pos.node);
             while (first != last) {
                 now_should_insert_after = insert_after(now_should_insert_after, *first);
                 ++first;
             }
             return now_should_insert_after;
+        }
+
+    public:
+        iterator
+        insert_after(const_iterator pos, size_type element_to_insert_count, const T &value) {
+            return insert_after_imp(pos, element_to_insert_count, value, std::true_type());
+        }
+
+        template<typename InputIt>
+        iterator insert_after(const_iterator pos, InputIt first_param, InputIt second_param) {
+            return insert_after_imp(pos, first_param, second_param, std::is_integral<InputIt>());
         }
 
         iterator insert_after(const_iterator pos, std::initializer_list<T> ilist) {
@@ -492,13 +490,15 @@ namespace Readable {
         template<typename alloc>
         void splice_after(const_iterator pos, forward_list<T, alloc> &other,
                           const_iterator it) {
-            splice_after(pos, other, it, other.end());
+            if (pos != it && next(pos) != it)
+                splice_after(pos, other, it, next(it, 2));
         }
 
         template<typename alloc>
         void splice_after(const_iterator pos, forward_list<T, alloc> &&other,
                           const_iterator it) {
-            splice_after(pos, other, it, other.end());
+            if (pos != it && next(pos) != it)
+                splice_after(pos, other, it, next(it, 2));
         }
 
         template<typename alloc>

@@ -18,13 +18,16 @@ struct C {
 };
 
 int main() {
-    Readable::forward_list<int> l{2, 3, 3, 6, 6, 4, 1, 4, 2, 2, 7, 4, 5, 9, 1, 5, 1, 5, 7, 1, 5};
-    Readable::forward_list<int> l1(10);
-    l.sort();
+    Readable::forward_list<int> l{3, 4, 1, 3, 6, 3};
+    Readable::forward_list<int> l1{4, 1, 2, 4, 5, 6};
+    l.splice_after(l.before_begin(), l1, next(l1.begin(), 4));
     for (auto n:l) {
         cout << n << ',';
     }
     cout << endl;
-
+    for (auto n:l1) {
+        cout << n << ',';
+    }
+    cout << endl;
     return 0;
 }
