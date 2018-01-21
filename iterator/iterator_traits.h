@@ -144,7 +144,7 @@ namespace Readable {
      */
     template<typename InputIt>
     typename Readable::iterator_traits<InputIt>::difference_type distance(InputIt first, InputIt last) {
-        // traits技法，见advance的实现
+        // traits技法，参考advance的实现
         return distance(first, last, Readable::iterator_traits<InputIt>::iterator_category());
     }
 
