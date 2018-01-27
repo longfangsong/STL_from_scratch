@@ -1,9 +1,20 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <forward_list>
 #include "containers/vector.h"
+#include "containers/forward_list.h"
 
 using namespace std;
+
+void test_forward_list() {
+    Readable::forward_list<int> l{1, 2, 3, 4, 5, 6};
+    l.assign(next(l.begin(), 1), next(l.begin(), 3));
+    for (auto val:l) {
+        std::cout << val << ',';
+    }
+    cout << endl;
+}
 
 void test_vector() {
     Readable::vector<int> v{1, 2, 3};
@@ -27,7 +38,7 @@ void test_vector() {
 }
 
 int main() {
-    string s;
+    test_forward_list();
     test_vector();
     return 0;
 }

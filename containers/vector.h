@@ -83,14 +83,12 @@ namespace Readable {
         template<typename alloc_type>
         vector(const vector<T, alloc_type> &other, const Allocator &alloc) : vector(other) {};
 
-        template<typename alloc_type>
-        vector(vector<T, alloc_type> &&other):
+        vector(vector &&other) :
                 start(std::move(other.start)),
                 finish(std::move(other.finish)),
                 end_of_storage(std::move(other.end_of_storage)) {}
 
-        template<typename alloc_type>
-        vector(vector<T, alloc_type> &&other, const Allocator &alloc):vector(other) {}
+        vector(vector &&other, const Allocator &alloc) : vector(other) {}
 
         vector(const std::initializer_list<T> &init,
                const Allocator &alloc = Allocator()) : vector(init.begin(), init.end()) {}
@@ -151,6 +149,11 @@ namespace Readable {
         vector &operator=(const vector<T, alloc_type> &other) {
             // safe when self assignment
             // see the source code of assign
+            assign(other.begin(), other.end());
+            return *this;
+        }
+
+        vector &operator=(const vector &other) {
             assign(other.begin(), other.end());
             return *this;
         }

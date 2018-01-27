@@ -53,9 +53,9 @@ namespace Readable {
         // 本身的类型
         typedef forward_list_iterator<T, ReferenceType, PointerType> self_type;
         // 正常的迭代器类型
-        typedef forward_list_iterator<T, T &, T *> iterator;
+        typedef forward_list_iterator<T, T &, T *> iterator_type;
         // const的迭代器类型
-        typedef forward_list_iterator<T, const T &, const T *> const_iterator;
+        typedef forward_list_iterator<T, const T &, const T *> const_iterator_type;
         // 实际保存的内容
         forward_list_node_base *node;
 
@@ -63,9 +63,10 @@ namespace Readable {
         explicit forward_list_iterator(forward_list_node_base *the_node = nullptr) : node(the_node) {}
 
         // 使iterator可以拷贝构造自无论是否const的iterator
-        explicit forward_list_iterator(const iterator &other) : node(other.node) {}
+        // 允许自动转换
+        forward_list_iterator(const iterator_type &other) : node(other.node) {}
 
-        explicit forward_list_iterator(const const_iterator &other) : node(other.node) {}
+        forward_list_iterator(const const_iterator_type &other) : node(other.node) {}
 
         // 下面实现标准文件规定forward_iterator应该实现的所有操作
         bool operator==(const forward_list_iterator &rhs) const {
@@ -155,7 +156,13 @@ namespace Readable {
             insert_after(before_begin(), other.begin(), other.end());
         }
 
-        // 对于move_constructor，只在copy_counstruct的other和自己类型完全相同时才能使用move加速
+        template<typename alloc_type>
+        forward_list(const forward_list &other, const Allocator &alloc = Allocator()) : forward_list(
+                alloc) {
+            insert_after(before_begin(), other.begin(), other.end());
+        }
+
+        // 对于move_constructor，只在other和自己类型完全相同(即不仅T相同，allocator也相同)时才能使用move加速
         // 对于other和自己类型不完全相同的情况，other将不被看作将亡值，而由上面一个函数进行逐元素处理
         forward_list(self_type &&other, const Allocator &alloc = Allocator()) : node_before_begin(
                 std::move(other.node_before_begin)) {}
@@ -171,8 +178,13 @@ namespace Readable {
             return *this;
         }
 
+        self_type &operator=(const forward_list &other) {
+            assign(other.begin(), other.end());
+            return *this;
+        }
+
         template<typename alloc_type>
-        self_type &operator=(forward_list<T, alloc_type> &&other) noexcept {
+        self_type &operator=(forward_list &&other) noexcept {
             node_before_begin = std::move(other.node_before_begin);
             return *this;
         }
@@ -187,10 +199,28 @@ namespace Readable {
             insert_after(before_begin(), element_count, value);
         }
 
-        template<class InputIt>
+        template<typename InputIt>
         void assign(InputIt first, InputIt last) {
-            clear();
-            insert_after(before_begin(), first, last);
+            auto it = before_begin();
+            while (next(it) != end() && next(it) != first) {
+                erase_after(it);
+            }
+            if (next(it) == first) {
+                // so [first, last) is in [begin(),end)
+                while (next(it) != last) {
+                    // go to last
+                    ++it;
+                }
+                while (next(it) != end()) {
+                    // erase them all!
+                    erase_after(it);
+                }
+            } else {
+                // so [first, last) is not in [begin(),end)
+                // just need to clear
+                clear();
+                insert_after(before_begin(), first, last);
+            }
         }
 
         void assign(std::initializer_list<T> ilist) {
@@ -737,6 +767,6 @@ namespace Readable {
         void sort(Compare comp) {
             node_before_begin.next = sort_by_node(forward_list<T, allocator_type>::node_before_begin.next, comp);
         }
-    }final;
+    };
 }
 #endif //STL_FROM_SCRATCH_FORWARD_LIST_H

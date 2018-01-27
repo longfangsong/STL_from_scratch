@@ -49,3 +49,10 @@ forward_list代码位于./memory/iterator_traits.h
 type_traits代码位于./type_traits/ 下，此处用到了is_integral.h及其间接`#include`的部分。
 
 pair相关代码位于./utility/utility.h
+
+### 5. 最经典的容器
+
+STL中最经典，被人重新造轮子出来次数最多的容器就是`vector`了，确实作为一个“可变大小数组”，`vector`的用途广，实现相对简单，很适合作为第一个实现的容器。
+
+在实现`vector`的同时，我们也实现了`iterator`的装饰器`reverse_iterator`，以供`rbegin`和`rend`使用。
+
