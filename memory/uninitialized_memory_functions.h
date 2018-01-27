@@ -6,6 +6,7 @@
 #define STL_FROM_SCRATCH_MEMORY_FUNCTIONS_H
 
 #include "../iterator/iterator_traits.h"
+#include "./memory.h"
 
 namespace Readable {
     /**
@@ -19,7 +20,7 @@ namespace Readable {
      */
     template<typename InputIt, typename ForwardIt>
     ForwardIt uninitialized_copy(InputIt first, InputIt last, ForwardIt desination_first) {
-        // 注释一个，另外三个同理
+        // 注释一个，另外几个同理
         typedef typename Readable::iterator_traits<ForwardIt>::value_type Value;
         // 现在复制到的位置
         ForwardIt current = desination_first;
@@ -29,7 +30,7 @@ namespace Readable {
                 // 用new运算符复制元素
                 // addressof即取地址
                 // 不用&为的是防止用户重载&运算符，造成&意义改变
-                ::new(static_cast<void *>(std::addressof(*current))) Value(*first);
+                ::new(static_cast<void *>(Readable::addressof(*current))) Value(*first);
             }
             return current;
         } catch (...) {
@@ -41,6 +42,32 @@ namespace Readable {
             throw;
         }
     }
+
+    /**
+     * 将 [@arg first,@arg last) 之间的元素移动到未初始化过的@arg desination_first开始的地址中
+     * @tparam ForwardIt 符合InpytIterator要求的迭代器
+     * @tparam InputIt 符合ForwardIterator要求的迭代器
+     * @param first 要move序列的头迭代器
+     * @param last 要move序列的超尾迭代器
+     * @param desination_first move目标的头迭代器
+     * @return move完成的序列的超尾迭代器
+     */
+    template<typename InputIt, typename ForwardIt>
+    ForwardIt uninitialized_move(InputIt first, InputIt last, ForwardIt desination_first) {
+        typedef typename Readable::iterator_traits<ForwardIt>::value_type Value;
+        ForwardIt current = desination_first;
+        try {
+            for (; first != last; ++first, ++current) {
+                ::new(static_cast<void *>(Readable::addressof(*current))) Value(std::move(*first));
+            }
+            return current;
+        } catch (...) {
+            for (; desination_first != current; ++desination_first) {
+                desination_first->~Value();
+            }
+            throw;
+        }
+    };
 
     /**
      * 将未初始化过的地址[@arg first,@arg last) 之间的空间用@arg value填充
@@ -56,7 +83,7 @@ namespace Readable {
         ForwardIt current = first;
         try {
             for (; current != last; ++current) {
-                ::new(static_cast<void *>(std::addressof(*current))) Value(value);
+                ::new(static_cast<void *>(Readable::addressof(*current))) Value(value);
             }
         } catch (...) {
             for (; first != current; ++first) {
@@ -65,7 +92,6 @@ namespace Readable {
             throw;
         }
     }
-
 
     /**
      * 将由@arg first开始的@arg count个T元素复制到未初始化过的@arg desination_first开始的地址中
@@ -83,7 +109,7 @@ namespace Readable {
         ForwardIt current = desination_first;
         try {
             for (; count > 0; ++first, ++current, --count) {
-                ::new(static_cast<void *>(std::addressof(*current))) Value(*first);
+                ::new(static_cast<void *>(Readable::addressof(*current))) Value(*first);
             }
         } catch (...) {
             for (; desination_first != current; ++desination_first) {
@@ -102,14 +128,15 @@ namespace Readable {
      * @param first 要填充序列的头迭代器
      * @param count 要填充的元素个数
      * @param value 要填充的值
+     * @return 指向复制的最后一个元素的下一个元素的迭代器
      */
     template<typename ForwardIt, typename Size, typename T>
-    void uninitialized_fill_n(ForwardIt first, Size count, const T &value) {
+    ForwardIt uninitialized_fill_n(ForwardIt first, Size count, const T &value) {
         typedef typename std::iterator_traits<ForwardIt>::value_type Value;
         ForwardIt current = first;
         try {
             for (; count > 0; ++current, --count) {
-                ::new(static_cast<void *>(std::addressof(*current))) Value(value);
+                ::new(static_cast<void *>(Readable::addressof(*current))) Value(value);
             }
             return current;
         } catch (...) {
@@ -119,7 +146,6 @@ namespace Readable {
             throw;
         }
     }
-
 
     /**
      * 在 @arg p 处以 @arg construct_param 为参数构造一个对象
@@ -156,6 +182,24 @@ namespace Readable {
         p->~T();
     }
 
+    // 同destroy，since C++17
+    template<typename T>
+    inline void destroy_at(T *p) {
+        Readable::destroy(p);
+    }
+
+    /**
+     * 析构从 [@arg first,@arg last) 之间的所有对象
+     * @tparam ForwardIt 迭代器
+     * @param first 头迭代器
+     * @param last 超尾迭代器
+     */
+    template<typename ForwardIt>
+    void destroy(ForwardIt first, ForwardIt last) {
+        for (; first != last; ++first) {
+            Readable::destroy_at(std::addressof(*first));
+        }
+    }
 
 }
 #endif //STL_FROM_SCRATCH_MEMORY_FUNCTIONS_H

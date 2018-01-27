@@ -1,33 +1,33 @@
 #include <iostream>
-#include <forward_list>
-#include "containers/forward_list.h"
+#include <iomanip>
+#include <vector>
+#include "containers/vector.h"
 
 using namespace std;
-int cnt = 0;
 
-struct C {
-    int n;
-
-    C() : n(++cnt) {
-        cout << "Id=" << n << " created!" << endl;
+void test_vector() {
+    Readable::vector<int> v{1, 2, 3};
+    Readable::vector<int> vector1{4, 5, 6};
+    v.insert(v.begin(), vector1.begin(), vector1.end());
+    auto it = v.erase(v.begin(), v.begin() + 2);
+    for (auto val:v) {
+        cout << val << ',';
     }
+    cout << endl << *it;
 
-    ~C() {
-        cout << "Id=" << n << " deleted!" << endl;
-    }
-};
+    Readable::vector<std::string> numbers;
+
+    numbers.push_back("abc");
+    std::string s = "def";
+    numbers.push_back(std::move(s));
+
+    std::cout << "vector holds: ";
+    for (auto &&i : numbers) std::cout << i << ' ';
+    std::cout << "\nMoved-from string holds " << s << '\n';
+}
 
 int main() {
-    Readable::forward_list<int> l{3, 4, 1, 3, 6, 3};
-    Readable::forward_list<int> l1{4, 1, 2, 4, 5, 6};
-    l.splice_after(l.before_begin(), l1, next(l1.begin(), 4));
-    for (auto n:l) {
-        cout << n << ',';
-    }
-    cout << endl;
-    for (auto n:l1) {
-        cout << n << ',';
-    }
-    cout << endl;
+    string s;
+    test_vector();
     return 0;
 }

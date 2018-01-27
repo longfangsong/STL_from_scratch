@@ -5,6 +5,7 @@
 #include "../iterator/iterator_traits.h"
 #include "../utility/utility.h"
 #include "../type_traits/type_traits.h"
+#include "../iterator/iterator.h"
 
 namespace Readable {
     /**
@@ -39,14 +40,15 @@ namespace Readable {
      * @tparam PointerType 指针类型，可以为const或非const
      */
     template<typename T, typename ReferenceType, typename PointerType>
-    class forward_list_iterator {
+    class forward_list_iterator :
+            public Readable::iterator<
+                    Readable::forward_iterator_tag,
+                    T,
+                    std::ptrdiff_t,
+                    PointerType,
+                    ReferenceType
+            > {
     public:
-        // 以下是iterator_traits所需知道的内容
-        typedef std::ptrdiff_t difference_type;
-        typedef T value_type;
-        typedef ReferenceType reference;
-        typedef PointerType pointer;
-        typedef Readable::forward_iterator_tag iterator_category;
         // 为方便起见定义的一些类型
         // 本身的类型
         typedef forward_list_iterator<T, ReferenceType, PointerType> self_type;
@@ -100,7 +102,7 @@ namespace Readable {
      * @tparam Allocator 空间分配器
      */
     template<typename T, typename Allocator = Readable::allocator<T>>
-    class forward_list {
+    class forward_list final {
     public:
         typedef T value_type;
         typedef Allocator allocator_type;
@@ -255,7 +257,7 @@ namespace Readable {
         static forward_list_node_base *create_node(const T &value) {
             node_type *new_node = node_allocator::allocate(1);
             try {
-                construct(&new_node->value, value);
+                Readable::construct(&new_node->value, value);
             } catch (...) {
                 // rollback
                 node_allocator::deallocate(new_node, 1);
@@ -267,7 +269,7 @@ namespace Readable {
         static forward_list_node_base *create_node(T &&value) {
             node_type *new_node = node_allocator::allocate(1);
             try {
-                construct(&new_node->value, value);
+                Readable::construct(&new_node->value, value);
             } catch (...) {
                 // rollback
                 node_allocator::deallocate(new_node, 1);
@@ -276,8 +278,8 @@ namespace Readable {
             return (forward_list_node_base *) (new_node);
         }
 
-        static void destory_node(node_type *node) {
-            destroy(&node->value);
+        static void destroy_node(node_type *node) {
+            Readable::destroy(&node->value);
             node_allocator::deallocate(node, 1);
         }
 
@@ -348,19 +350,18 @@ namespace Readable {
             return insert_after(pos, ilist.begin(), ilist.end());
         }
 
-        // todo: 这个实现需要修改
-//        template<class... Args>
-//        iterator emplace_after(const_iterator pos, Args &&... args) {
-//            forward_list_node_base *node_to_be_inserted_after = pos.node;
-//            forward_list_node_base *node_to_insert = create_node(T(args));
-//            return iterator(insert_after(node_to_be_inserted_after, node_to_insert));
-//        }
+        template<typename... Args>
+        iterator emplace_after(const_iterator pos, Args &&... args) {
+            forward_list_node_base *node_to_be_inserted_after = pos.node;
+            forward_list_node_base *node_to_insert = create_node(T(std::forward<Args>(args)...));
+            return iterator(insert_after(node_to_be_inserted_after, node_to_insert));
+        }
 
         iterator erase_after(const_iterator pos) {
             forward_list_node_base *the_node_to_erase_after = pos.node;
             if (the_node_to_erase_after->next) {
                 auto next_of_next = the_node_to_erase_after->next->next;
-                destory_node((node_type *) the_node_to_erase_after->next);
+                destroy_node((node_type *) the_node_to_erase_after->next);
                 the_node_to_erase_after->next = next_of_next;
             }
             return iterator(the_node_to_erase_after->next);
@@ -372,7 +373,7 @@ namespace Readable {
             if (node_first != node_last) {
                 while (node_first->next != node_last) {
                     auto next_of_next = node_first->next->next;
-                    destory_node((node_type *) node_first->next);
+                    destroy_node((node_type *) node_first->next);
                     node_first->next = next_of_next;
                 }
             }
@@ -391,9 +392,10 @@ namespace Readable {
             insert_after(before_begin(), value);
         }
 
-        // todo: 实现这个
-        //template< class... Args >
-        //void emplace_front( Args&&... args );
+        template<typename... Args>
+        void emplace_front(Args &&... args) {
+            emplace_after(iterator(before_begin()), std::forward<Args>(args)...);
+        }
 
         void pop_front() {
             erase_after(before_begin());
@@ -735,6 +737,6 @@ namespace Readable {
         void sort(Compare comp) {
             node_before_begin.next = sort_by_node(forward_list<T, allocator_type>::node_before_begin.next, comp);
         }
-    };
+    }final;
 }
 #endif //STL_FROM_SCRATCH_FORWARD_LIST_H
