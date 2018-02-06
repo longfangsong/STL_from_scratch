@@ -9,7 +9,7 @@ using namespace std;
 
 void test_forward_list() {
     Readable::forward_list<int> l{1, 2, 3, 4, 5, 6};
-    l.assign(next(l.begin(), 1), next(l.begin(), 3));
+    l.assign(Readable::next(l.begin(), 1), Readable::next(l.begin(), 3));
     for (auto val:l) {
         std::cout << val << ',';
     }

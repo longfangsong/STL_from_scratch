@@ -13,7 +13,7 @@ namespace Readable {
         return d_last;
     }
 
-    template<class BidirIt1, class BidirIt2>
+    template<typename BidirIt1, typename BidirIt2>
     BidirIt2 move_backward(BidirIt1 first,
                            BidirIt1 last,
                            BidirIt2 d_last) {
@@ -23,7 +23,7 @@ namespace Readable {
         return d_last;
     }
 
-    template<class InputIt, class OutputIt>
+    template<typename InputIt, typename OutputIt>
     OutputIt move(InputIt first, InputIt last, OutputIt d_first) {
         while (first != last) {
             *d_first++ = std::move(*first++);

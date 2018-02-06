@@ -302,10 +302,16 @@ namespace Readable {
         }
 
     private:
+        /**
+         * 将[pos, finish - move_distance)的所有元素向后移动到与原先的 [pos + move_distance, finish) 重合，移动后pos之后将会空出move_distance个空位
+         */
         void move_elements_back(const_iterator pos, size_type move_distance) {
             Readable::move_backward(pos, const_iterator(finish - move_distance), finish);
         }
 
+        /**
+         * 将[pos, finish)的所有元素向前移动到与原先的 [pos - move_distance, finish - move_distance) 重合，移动后finish之前将会空出move_distance个空位
+         */
         void move_elements_forward(const_iterator pos, size_type move_distance) {
             Readable::move(iterator(pos), finish, iterator(pos - move_distance));
         }
@@ -389,9 +395,9 @@ namespace Readable {
         iterator erase(const_iterator first, const_iterator last) {
             Readable::destroy(first, last);
             auto n = static_cast<size_type>(distance(first, last));
-            move_elements_forward(first, n);
+            move_elements_forward(last, n);
             finish -= n;
-            return iterator(first);
+            return iterator(last);
         }
 
         void push_back(const T &value) {
@@ -401,9 +407,7 @@ namespace Readable {
         }
 
         void push_back(T &&value) {
-            reserve(size() + 1);
-            *finish = std::move(value);
-            ++finish;
+            emplace_back(std::move(value));
         }
 
         template<class... Args>

@@ -197,7 +197,7 @@ namespace Readable {
     template<typename ForwardIt>
     void destroy(ForwardIt first, ForwardIt last) {
         for (; first != last; ++first) {
-            Readable::destroy_at(std::addressof(*first));
+            Readable::destroy_at(Readable::addressof(*first));
         }
     }
 
