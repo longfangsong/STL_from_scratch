@@ -77,12 +77,12 @@ namespace Readable {
             return !(rhs == *this);
         }
 
-        T &operator*() const {
+        ReferenceType operator*() const {
             return ((forward_list_node<T> *) (node))->value;
         }
 
-        T *operator->() const {
-            return &(operator*());
+        PointerType operator->() const {
+            return Readable::addressof(operator*());
         }
 
         self_type &operator++() {

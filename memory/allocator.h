@@ -42,7 +42,7 @@ namespace Readable {
          * @param n 要分配的对象个数
          * @return 分配到的内存头指针
          */
-        static T *allocate(std::size_t n) {
+        static pointer allocate(std::size_t n) {
             return (T *) (::operator new(n * sizeof(T)));
         }
 
@@ -52,7 +52,7 @@ namespace Readable {
          * @param n 要回收的指针内T类型元素的多少
          * @note 由于new-delete的实现，@arg n 实际上并没有用处
          */
-        static void deallocate(T *p, std::size_t n) {
+        static void deallocate(pointer p, std::size_t n) {
             ::operator delete(p);
         }
 

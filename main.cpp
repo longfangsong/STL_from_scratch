@@ -4,6 +4,7 @@
 #include <forward_list>
 #include "containers/vector.h"
 #include "containers/forward_list.h"
+#include "containers/deque.h"
 
 using namespace std;
 
