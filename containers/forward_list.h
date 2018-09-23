@@ -6,6 +6,7 @@
 #include "../utility/utility.h"
 #include "../type_traits/type_traits.h"
 #include "../iterator/iterator.h"
+#include "../functional/functional.h"
 
 namespace Readable {
     /**
@@ -29,9 +30,9 @@ namespace Readable {
          * 用 @arg val 构造forward_list的节点
          * @param val 要保存的值
          */
-        forward_list_node(const T &val) : value(val) {}
+        explicit forward_list_node(const T &val) : forward_list_node_base(), value(val) {}
 
-        forward_list_node(T &&val) : value(std::move(val)) {}
+        explicit forward_list_node(T &&val) : forward_list_node_base(), value(std::move(val)) {}
     };
 
     /**
@@ -40,7 +41,7 @@ namespace Readable {
      * @tparam PointerType 指针类型，可以为const或非const
      */
     template<typename T, typename ReferenceType, typename PointerType>
-    class forward_list_iterator :
+    struct forward_list_iterator :
             public Readable::iterator<
                     Readable::forward_iterator_tag,
                     T,
@@ -48,7 +49,6 @@ namespace Readable {
                     PointerType,
                     ReferenceType
             > {
-    public:
         // 为方便起见定义的一些类型
         // 本身的类型
         typedef forward_list_iterator<T, ReferenceType, PointerType> self_type;
@@ -457,62 +457,12 @@ namespace Readable {
         // merge族函数还存在优化空间——考虑将insert_after改为splice_after的实现
         template<typename alloc>
         void merge(forward_list<T, alloc> &other) {
-            // 储存this中现在处理到的位置和其next
-            auto this_now = before_begin();
-            auto this_next = begin();
-            // 储存other中现在处理到的位置和其next
-            auto other_now = other.before_begin();
-            auto other_next = other.begin();
-            while (this_next != end() && other_next != end()) {
-                if (*this_next < *other_next) {
-                    // 直接处理this中下一个元素
-                    ++this_next;
-                    ++this_now;
-                } else { // *this_next >= *other_next
-                    // 将other_next并入this，插入到this_now之后，this_next之前
-                    insert_after(this_now, *other_next);
-                    // 这两句将this_next置为刚刚插入的节点
-                    this_next = this_now;
-                    ++this_next;
-
-                    ++other_now;
-                    ++other_next;
-                }
-            }
-            while (other_next != end()) {
-                insert_after(this_now, *other_next);
-                ++this_now;
-                ++other_now;
-                ++other_next;
-            }
-            other.clear();
+            merge(other, less<T>());
         }
 
         template<typename alloc>
         void merge(forward_list<T, alloc> &&other) {
-            auto this_now = before_begin();
-            auto this_next = begin();
-            auto other_now = other.before_begin();
-            auto other_next = other.begin();
-            while (this_next != end() && other_next != end()) {
-                if (*this_next < *other_next) {
-                    ++this_next;
-                    ++this_now;
-                } else {
-                    insert_after(this_now, *other_next);
-                    this_next = this_now;
-                    ++this_next;
-                    ++other_now;
-                    ++other_next;
-                }
-            }
-            while (other_next != end()) {
-                insert_after(this_now, *other_next);
-                ++this_now;
-                ++other_now;
-                ++other_next;
-            }
-            // other为将亡值，无需clear
+            merge(other, less<T>());
         }
 
 
@@ -703,7 +653,7 @@ namespace Readable {
             auto head2 = tail1->next;
             // 断开链表
             tail1->next = nullptr;
-            return Readable::pair<forward_list_node_base *, forward_list_node_base *>(first, head2);
+            return {first, head2};
         }
 
         // 基于node的归并
@@ -768,5 +718,5 @@ namespace Readable {
             node_before_begin.next = sort_by_node(forward_list<T, allocator_type>::node_before_begin.next, comp);
         }
     };
-}
+};
 #endif //STL_FROM_SCRATCH_FORWARD_LIST_H

@@ -134,17 +134,17 @@ namespace Readable {
             return *this;
         }
 
-        template<typename T, typename ReferenceTypeA, typename PointerTypeA, size_t PartSize,
+        template<typename U, typename ReferenceTypeA, typename PointerTypeA, size_t PartSize_,
                 typename ReferenceTypeB, typename PointerTypeB>
-        friend ptrdiff_t operator-(deque_iterator<T, ReferenceTypeA, PointerTypeA, PartSize> a,
-                                   deque_iterator<T, ReferenceTypeB, PointerTypeB, PartSize> b) {
+        friend ptrdiff_t operator-(deque_iterator<U, ReferenceTypeA, PointerTypeA, PartSize_> a,
+                                   deque_iterator<U, ReferenceTypeB, PointerTypeB, PartSize_> b) {
             if (a.part_now_in == b.part_now_in) {
                 return static_cast<ptrdiff_t>(a.the_object - b.the_object);
             } else if (a.part_now_in < b.part_now_in) {
                 return -(b - a);
             }
             // 保证a、b处于不同的parts中，且a在b之后
-            return static_cast<ptrdiff_t>(a.part_now_in - b.part_now_in - 1) * PartSize +
+            return static_cast<ptrdiff_t>(a.part_now_in - b.part_now_in - 1) * PartSize_ +
                    static_cast<ptrdiff_t>(a.part_now_in->part_end - a.the_object) +
                    static_cast<ptrdiff_t>(b.the_object - b.part_now_in->part_start);
         }
