@@ -6,5 +6,6 @@
 #define STL_FROM_SCRATCH_ALGORITHM_H
 
 #include "./modifying_sequence.h"
+#include "./permutation.h"
 
 #endif //STL_FROM_SCRATCH_ALGORITHM_H

@@ -112,8 +112,17 @@ void test_list() {
 }
 
 int main() {
-//    test_forward_list();
-//    test_vector();
-    test_list();
+    vector<int> v{1, 2, 3, 4};
+    for (auto val:v) {
+        std::cout << val << ',';
+    }
+    std::cout << std::endl;
+    for (size_t i = 0; i < 23; ++i) {
+        std::cout << Readable::prev_permutation(v.begin(), v.end()) << ' ';
+        for (auto val:v) {
+            std::cout << val << ',';
+        }
+        std::cout << std::endl;
+    }
     return 0;
 }
